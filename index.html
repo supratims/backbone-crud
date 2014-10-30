@@ -4,23 +4,25 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Backbone CRUD</title>
 
-  <title>Backbone Boilerplate</title>
+  <link rel="stylesheet" href="app/styles/index.css">
+  <link rel="stylesheet" href="app/styles/bootstrap.yeti.min.css">
 
-  <!-- Application styles. -->
-  <!-- build:[href] /styles.min.css -->
-  <link rel="stylesheet" href="/app/styles/index.css">
-  <!-- /build -->
 </head>
 
 <body>
-  <!-- Application container. -->
-  <main role="main" id="main"></main>
+	<div class="container hero">
+		<h3> Add your favourite brands and products </h3>
+		<div id="root" >
 
-  <!-- Application source. -->
-  <!-- build:[src] /source.min.js -->
-  <script src="/bower_components/requirejs/require.js"
-    data-main="/app/config"></script>
-  <!-- /build -->
+		</div>
+	</div>
 </body>
+<script src="app/js/jquery.js"></script>
+<script src="app/js/json2.js"></script>
+<script src="app/js/underscore.js"></script>
+<script src="app/js/backbone.min.js" ></script>
+<script src="app/modules/view.js"></script>
+
 </html>

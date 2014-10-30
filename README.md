@@ -1,2 +1,6 @@
-### CRUD application sample using backbone, built based on boilerplate by Tim Branyen (@tbranyen)  
+#### CRUD application sample using backbone
 
+
+#### Credits
+Tim Branyen (@tbranyen)  
+http://arturadib.com/hello-backbonejs/docs/5.html
