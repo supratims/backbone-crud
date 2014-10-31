@@ -1,68 +1,77 @@
 (function(){
 
-  // `Backbone.sync`: Overrides persistence storage with dummy function. This enables use of `Model.destroy()` without raising an error.
   Backbone.sync = function(method, model, success, error){
-    success();
+    //alert("deleted !");
+
   }
 
-  var Item = Backbone.Model.extend({
+  var Brand = Backbone.Model.extend({
     defaults: {
-      part1: 'hello',
-      part2: 'world'
+      id: '-1',
+      name: ''
     }
   });
 
-  var List = Backbone.Collection.extend({
-    model: Item
+  var Product = Backbone.Model.extend({
+    defaults: {
+      id: '-1',
+      brandId: '-1',
+      name: ''
+    }
   });
 
-  var ItemView = Backbone.View.extend({
-    tagName: 'li', // name of tag to be created
-    // `ItemView`s now respond to two clickable actions for each `Item`: swap and delete.
-    events: {
-      'click span.swap':  'swap',
-      'click span.delete': 'remove'
+  var BrandList = Backbone.Collection.extend({
+    model: Brand
+  });
+
+  var AddItemPaneView = Backbone.View.extend({
+	tagName: 'div',
+    render: function(){
+    	//consider using a mustache template ?
+    	$(this.el).attr('id', 'addBrandPane').addClass('col-xs-12').addClass('padding-top-20')
+			.append('<div class="form-group"><label class="control-label" for="brand">Brand</label><input type="text" id="brand" class="form-control" placeholder="Enter brand name"></div><button class="btn btn-success savebrandbtn">Save</button>')
+    	return this;
     },
-    // `initialize()` now binds model change/removal to the corresponding handlers below.
+    unrender: function(){
+      $(this.el).remove();
+    },
+  });
+
+  var BrandView = Backbone.View.extend({
+    tagName: 'div',
+    events: {
+      'click button.btn.removeBrandBtn': 'remove'
+    },
     initialize: function(){
-      _.bindAll(this, 'render', 'unrender', 'swap', 'remove'); // every function that uses 'this' as the current object should be in here
+      _.bindAll(this, 'render', 'unrender', 'remove'); // every function that uses 'this' as the current object should be in here
 
       this.model.bind('change', this.render);
       this.model.bind('remove', this.unrender);
     },
-    // `render()` now includes two extra `span`s corresponding to the actions swap and delete.
     render: function(){
-      $(this.el).html('<span style="color:black;">'+this.model.get('part1')+' '+this.model.get('part2')+'</span> &nbsp; &nbsp; <span class="swap" style="font-family:sans-serif; color:blue; cursor:pointer;">[swap]</span> <span class="delete" style="cursor:pointer; color:red; font-family:sans-serif;">[delete]</span>');
-      return this; // for chainable calls, like .render().el
+      $(this.el).addClass('panel panel-default')
+      	.append('<div class="panel-heading">Brand #' + this.model.get('id') + ' <button class="pull-right btn btn-xs btn-danger removeBrandBtn">Delete</button> </div>')
+      	.append('<div class="panel-body"> ' + this.model.get('name') + '</div>');
+      return this;
     },
-    // `unrender()`: Makes Model remove itself from the DOM.
     unrender: function(){
       $(this.el).remove();
     },
-    // `swap()` will interchange an `Item`'s attributes. When the `.set()` model function is called, the event `change` will be triggered.
-    swap: function(){
-      var swapped = {
-        part1: this.model.get('part2'),
-        part2: this.model.get('part1')
-      };
-      this.model.set(swapped);
-    },
-    // `remove()`: We use the method `destroy()` to remove a model from its collection. Normally this would also delete the record from its persistent storage, but we have overridden that (see above).
     remove: function(){
       this.model.destroy();
     }
   });
 
-  // Because the new features (swap and delete) are intrinsic to each `Item`, there is no need to modify `ListView`.
-  var ListView = Backbone.View.extend({
-    el: $('#root'), // el attaches to an existing html dom
+  var BrandListView = Backbone.View.extend({
+    el: $('.root'),
     events: {
-      'click button#add': 'addItem'
+      'click button.addBrandBtn': 'showForm',
+      'click button.savebrandbtn': 'addItem',
     },
     initialize: function(){
-      _.bindAll(this, 'render', 'addItem', 'appendItem'); // every function that uses 'this' as the current object should be in here
+      _.bindAll(this, 'render', 'addItem', 'showForm', 'appendItem'); // every function in this view that uses 'this' as the current context should be init here
 
-      this.collection = new List();
+      this.collection = new BrandList();
       this.collection.bind('add', this.appendItem); // collection event binder
 
       this.counter = 0;
@@ -70,27 +79,43 @@
     },
     render: function(){
       var self = this;
-      $(this.el).append("<button class='btn btn-primary' id='add'>Add Brand</button>");
-      _(this.collection.models).each(function(item){ // in case collection is not empty
+      _(this.collection.models).each(function(item){ // load existing collection
         self.appendItem(item);
       }, this);
     },
-    addItem: function(){
-      this.counter++;
-      var item = new Item();
-      item.set({
-        part2: item.get('part2') + this.counter // modify item defaults
-      });
-      this.collection.add(item);
+    showForm: function() {
+      if (this.addPaneView) return;
+      var addPaneView = new AddItemPaneView();
+      $('.formarea', this.el).html(addPaneView.render().el);
+      console.log(addPaneView.el);
+      this.addPaneView = addPaneView;
     },
-    appendItem: function(item){
-      var itemView = new ItemView({
-        model: item
+    addItem: function(){
+      if (!$('#brand').val() || !$('#brand').val().trim()) {//move this to a validator
+      	this.addPaneView.$('div.form-group').addClass('has-error');
+	    return;
+      } else {
+        this.addPaneView.$('div.form-group').removeClass('has-error');
+      }
+      this.counter++;
+      var brand = new Brand();
+      brand.set({
+        id: this.counter,
+        name: $('#brand').val()
       });
-      $(this.el).append(itemView.render().el);
+      this.addPaneView.unrender();
+      this.addPaneView=null;
+      this.collection.add(brand);
+    },
+    appendItem: function(brand){
+      var brandView = new BrandView({
+        model: brand
+      });
+
+      $('.brandlist', this.el).append(brandView.render().el);
     }
   });
 
-  var listView = new ListView();
+  var brandListView = new BrandListView();
 
 })();
